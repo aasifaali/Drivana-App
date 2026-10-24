@@ -1,0 +1,18 @@
+# /etc/systemd/system/drivana.service
+[Unit]
+Description=Drivana web app
+After=network.target
+
+[Service]
+Type=simple
+User=drivana
+WorkingDirectory=/opt/drivana
+ExecStart=/usr/bin/node --env-file=/opt/drivana/.env server/index.js
+Restart=always
+RestartSec=3
+NoNewPrivileges=true
+ProtectSystem=full
+ReadWritePaths=/opt/drivana/data
+
+[Install]
+WantedBy=multi-user.target

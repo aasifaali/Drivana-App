@@ -1,0 +1,11 @@
+# /etc/caddy/Caddyfile — Caddy gets and renews the HTTPS certificate automatically.
+# Point your domain's DNS A record at the VPS first, then replace drivana.example.com.
+drivana.example.com {
+	encode gzip
+	reverse_proxy 127.0.0.1:3000
+	header {
+		Strict-Transport-Security "max-age=31536000"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+	}
+}
