@@ -37,7 +37,11 @@ Run the tests with `npm test`.
 - **Cash and commission:** when the driver taps *Cash collected*, the commission is added to what they owe (`ledger_entries`). When a driver pays you by UPI, record it under **Admin › Drivers › Payments**. A driver who owes more than the limit can't go online.
 - **Prices are placeholders:** set real numbers in **Admin › Settings** before launch, along with the support phone and WhatsApp numbers.
 
-## Deploy to the Ubuntu VPS
+## Deploy
+
+**Course server:** Drivana runs on the shared course server. Follow `DEPLOY-GUIDE.md`; the details and update command are in `CLAUDE.md`.
+
+### Your own Ubuntu VPS (later)
 
 ```bash
 # On the server (Ubuntu 22.04/24.04)
@@ -58,7 +62,7 @@ sudo cp deploy/Caddyfile /etc/caddy/Caddyfile   # edit the domain first
 sudo systemctl reload caddy
 ```
 
-Production `.env`: `NODE_ENV=production`, a random `JWT_SECRET` (`openssl rand -hex 32`), `GOOGLE_CLIENT_ID`, `ADMIN_EMAILS`, and **no** `DEV_LOGIN`. Add your domain to the Google OAuth client's *Authorized JavaScript origins*.
+Production `.env` (or `~/.config/driverbooking.env` on the course server): `NODE_ENV=production`, a random `JWT_SECRET` (`openssl rand -hex 32`), `GOOGLE_CLIENT_ID`, `ADMIN_EMAILS`, and **no** `DEV_LOGIN`. Add your domain to the Google OAuth client's *Authorized JavaScript origins*.
 
 Back up the database every night with `deploy/backup.sh` (instructions inside), and copy the backups off the server.
 

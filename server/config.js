@@ -9,7 +9,7 @@ export function loadConfig(env = process.env) {
     production,
     port: Number(env.PORT || 3000),
     host: env.HOST || '127.0.0.1',
-    dbFile: env.DB_FILE || path.join(root, 'data', 'drivana.db'),
+    dbFile: env.DB_PATH || path.join(root, 'data', 'drivana.db'),
     webDist: path.join(root, 'web', 'dist'),
     jwtSecret: env.JWT_SECRET || '',
     googleClientId: env.GOOGLE_CLIENT_ID || '',

@@ -5,7 +5,7 @@ import { buildApp } from '../app.js';
 import { finalFare } from '../pricing.js';
 
 function setup() {
-  const config = loadConfig({ DEV_LOGIN: '1', DB_FILE: ':memory:' });
+  const config = loadConfig({ DEV_LOGIN: '1', DB_PATH: ':memory:' });
   config.webDist = '/nonexistent';
   const app = buildApp(config, { logger: false });
   return app;
