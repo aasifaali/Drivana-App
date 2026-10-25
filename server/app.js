@@ -7,6 +7,7 @@ import authRoutes from './routes/auth.js';
 import customerRoutes from './routes/customer.js';
 import driverRoutes from './routes/driver.js';
 import adminRoutes from './routes/admin.js';
+import { razorpayWebhookRoutes } from './razorpay.js';
 
 export function buildApp(config, { logger = true } = {}) {
   const app = Fastify({ logger, trustProxy: true, bodyLimit: 64 * 1024 });
@@ -27,6 +28,7 @@ export function buildApp(config, { logger = true } = {}) {
   app.register(customerRoutes, { ...deps, prefix: '/api/customer' });
   app.register(driverRoutes, { ...deps, prefix: '/api/driver' });
   app.register(adminRoutes, { ...deps, prefix: '/api/admin' });
+  app.register(razorpayWebhookRoutes, deps);
   app.get('/api/health', async () => ({ ok: true }));
 
   // Serve the built PWA; any non-API path falls back to index.html.

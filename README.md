@@ -6,7 +6,7 @@ One Node server runs three web apps (PWAs):
 
 | Path | Who | Sign-in |
 |---|---|---|
-| `/` | Customers book a driver, share the start OTP, pay cash, rate | Google (then types their mobile number, no OTP) |
+| `/` | Customers book a driver, share the start OTP, pay online or in cash, rate | Google (then types their mobile number, no OTP) |
 | `/driver` | Drivers sign up, go online, accept requests, run trips, confirm cash | Google (types their mobile number in the profile); phone OTP once `DRIVER_LOGIN=otp` |
 | `/admin` | Ops team: live bookings, manual assignment, driver approvals, commission dues, pricing | Google (allow-listed emails) |
 
@@ -36,6 +36,7 @@ Run the tests with `npm test`.
 - **Matching:** each request is shown to approved, online drivers within the dispatch radius who can drive that gearbox, and the first to accept gets it. If nobody accepts, it appears under **Needs attention** in the dashboard with an **Assign driver** button.
 - **Pricing:** the base fare covers the minimum hours, then the hourly rate applies. Overtime past the grace period is billed in 30-minute blocks, plus a flat night charge for trips touching 10pm–6am IST. Prices are copied onto each booking when it's made, so later changes in Settings don't alter past bookings.
 - **Cash and commission:** when the driver taps *Cash collected*, the commission is added to what they owe (`ledger_entries`). When a driver pays you by UPI, record it under **Admin › Drivers › Payments**. A driver who owes more than the limit can't go online.
+- **Online payments (Razorpay):** set the three `RAZORPAY_*` settings and customers get *Pay online* after the trip. The server creates an order for the exact fare and verifies Razorpay's signature (checkout reply, plus the `/api/razorpay/webhook` backup) before marking it paid. Drivana then holds the fare, so the driver's share goes on their ledger as a negative balance ("we owe"); record UPI payouts under **Admin › Drivers › Payments**. If a customer pays online after paying cash, a `duplicate_online_payment` event is logged on the booking; refund it from the Razorpay dashboard.
 - **Prices are placeholders:** set real numbers in **Admin › Settings** before launch, along with the support phone and WhatsApp numbers.
 
 ## Deploy
@@ -77,4 +78,4 @@ To update: copy the new code, then `npm ci && npm run build && sudo systemctl re
 
 ## Not built yet
 
-Online payments (Razorpay), scheduled bookings, outstation and one-way trips, live map tracking, driver document photo uploads, push notifications, in-app chat.
+Automatic driver payouts (Razorpay Route), scheduled bookings, outstation and one-way trips, live map tracking, driver document photo uploads, push notifications, in-app chat.

@@ -3,7 +3,8 @@ import { now, tx } from '../db.js';
 import { normalizePhone, requireRole } from '../auth.js';
 import { getSettings, httpError } from '../settings.js';
 import { estimateFare, pricingSnapshot } from '../pricing.js';
-import { activeBookingFor, bookingView, getBooking, listBookings, logEvent, unpaidCompletedFor } from '../bookings.js';
+import { activeBookingFor, bookingCode, bookingView, getBooking, listBookings, logEvent, unpaidCompletedFor } from '../bookings.js';
+import { createOrder, markPaidOnline, paymentSignatureValid } from '../razorpay.js';
 
 const CANCELLABLE = ['requested', 'accepted', 'arrived'];
 const RATING_TAGS = ['Smooth driving', 'On time', 'Car cared for', 'Polite', 'Knew the roads'];
@@ -130,6 +131,44 @@ export default async function customerRoutes(app, { db, config }) {
       .run(reason, now(), b.id);
     if (!changes) throw httpError(409, 'This booking can no longer be cancelled');
     logEvent(db, b.id, request.user.id, 'cancelled', { reason });
+    return bookingView(getBooking(db, b.id), 'customer');
+  });
+
+  // Pay after the trip, online. Step 1: a Razorpay order for the exact final fare.
+  app.post('/bookings/:id/pay', async (request) => {
+    if (!config.onlinePayments) throw httpError(400, 'Online payment is not available yet. Please pay in cash.');
+    const b = ownBooking(request);
+    if (b.status !== 'completed') throw httpError(409, 'You can pay once the trip ends');
+    if (b.payment_status !== 'pending') throw httpError(409, 'This trip is already paid');
+    let orderId = b.razorpay_order_id;
+    if (!orderId) {
+      const order = await createOrder(config, {
+        amount: b.fare_total * 100,
+        receipt: bookingCode(b.id),
+        notes: { booking_id: String(b.id) },
+      });
+      orderId = order.id;
+      db.prepare('UPDATE bookings SET razorpay_order_id = ? WHERE id = ? AND razorpay_order_id IS NULL').run(orderId, b.id);
+      orderId = db.prepare('SELECT razorpay_order_id FROM bookings WHERE id = ?').get(b.id).razorpay_order_id;
+    }
+    const u = request.user;
+    return {
+      keyId: config.razorpay.keyId,
+      orderId,
+      amount: b.fare_total * 100,
+      currency: 'INR',
+      description: `Trip ${bookingCode(b.id)}`,
+      prefill: { name: u.name || '', email: u.email || '', contact: u.phone || '' },
+    };
+  });
+
+  // Step 2: checkout hands back a signed payment; verify it before marking paid.
+  app.post('/bookings/:id/pay/verify', async (request) => {
+    const b = ownBooking(request);
+    const { razorpay_order_id: orderId, razorpay_payment_id: paymentId, razorpay_signature: signature } = request.body || {};
+    if (!orderId || orderId !== b.razorpay_order_id || !paymentId) throw httpError(400, 'Payment details do not match this trip');
+    if (!paymentSignatureValid(config, orderId, paymentId, signature)) throw httpError(400, 'Could not verify the payment');
+    markPaidOnline(db, b.id, orderId, paymentId);
     return bookingView(getBooking(db, b.id), 'customer');
   });
 

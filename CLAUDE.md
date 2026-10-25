@@ -5,7 +5,7 @@ On-demand drivers for the customer's own car. Node 22.13+ (Fastify, built-in `no
 - `npm run dev`: API on :3000 and Vite on :5173 (proxies `/api`). Uses `.env` (DEV_LOGIN=1 locally).
 - `npm test`: API flow tests (in-memory DB).
 - `npm run build`: builds `web/dist`, which the server serves in production.
-- Settings: `PORT`, `HOST`, `DB_PATH`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `ADMIN_EMAILS`, `SMS_PROVIDER`, `DRIVER_LOGIN` (google | otp), `DEV_LOGIN` (see `.env.example`).
+- Settings: `PORT`, `HOST`, `DB_PATH`, `JWT_SECRET`, `GOOGLE_CLIENT_ID`, `ADMIN_EMAILS`, `SMS_PROVIDER`, `DRIVER_LOGIN` (google | otp), `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `RAZORPAY_WEBHOOK_SECRET` (online payment is off without the keys), `DEV_LOGIN` (see `.env.example`).
 - Sign-in: customers, drivers and admins use Google; customers and drivers type a mobile number without OTP. Driver numbers are unique.
 - Schema changes: add a new entry to `MIGRATIONS` in `server/db.js`; never edit a shipped one.
 

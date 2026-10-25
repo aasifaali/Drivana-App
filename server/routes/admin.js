@@ -23,7 +23,14 @@ export default async function adminRoutes(app, { db, config }) {
         "SELECT COUNT(*) AS n FROM drivers d JOIN users u ON u.id = d.user_id WHERE d.status = 'pending' AND d.licence_number IS NOT NULL",
       ),
       cashPending: count("SELECT COUNT(*) AS n FROM bookings WHERE status = 'completed' AND payment_status = 'pending'"),
-      totalOwed: db.prepare('SELECT COALESCE(SUM(amount), 0) AS n FROM ledger_entries').get().n,
+      // Per-driver balances: positive = driver owes Drivana, negative = Drivana owes the driver.
+      ...db
+        .prepare(
+          `SELECT COALESCE(SUM(CASE WHEN bal > 0 THEN bal END), 0) AS totalOwed,
+                  COALESCE(-SUM(CASE WHEN bal < 0 THEN bal END), 0) AS owedToDrivers
+           FROM (SELECT SUM(amount) AS bal FROM ledger_entries GROUP BY driver_id)`,
+        )
+        .get(),
     };
   });
 
@@ -149,14 +156,18 @@ export default async function adminRoutes(app, { db, config }) {
       .all(Number(request.params.id));
   });
 
-  // Driver paid Drivana (UPI/cash). Records a negative entry against what they owe.
+  // Money moving between Drivana and a driver, by UPI or cash.
+  // "settlement": driver paid Drivana their commission (negative entry).
+  // "payout": Drivana paid the driver their share of online trips (positive entry).
   app.post('/drivers/:id/settlement', async (request) => {
     const id = Number(request.params.id);
     const amount = Math.round(Number(request.body?.amount));
-    if (!(amount > 0)) throw httpError(400, 'Enter the amount received');
+    const payout = request.body?.direction === 'payout';
+    if (!(amount > 0)) throw httpError(400, 'Enter the amount');
     if (!db.prepare('SELECT 1 FROM drivers WHERE user_id = ?').get(id)) throw httpError(404, 'Driver not found');
-    db.prepare("INSERT INTO ledger_entries (driver_id, kind, amount, note, created_by, created_at) VALUES (?, 'settlement', ?, ?, ?, ?)").run(
-      id, -amount, String(request.body?.note || 'Payment received').slice(0, 200), request.user.id, now(),
+    const note = String(request.body?.note || (payout ? 'Paid to driver' : 'Payment received')).slice(0, 200);
+    db.prepare('INSERT INTO ledger_entries (driver_id, kind, amount, note, created_by, created_at) VALUES (?, ?, ?, ?, ?, ?)').run(
+      id, payout ? 'payout' : 'settlement', payout ? amount : -amount, note, request.user.id, now(),
     );
     return { ok: true };
   });

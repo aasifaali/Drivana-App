@@ -22,7 +22,13 @@ export function loadConfig(env = process.env) {
     smsProvider: env.SMS_PROVIDER || 'console',
     // How drivers sign in: "google" (default) or "otp" once SMS is set up.
     driverLogin: env.DRIVER_LOGIN === 'otp' ? 'otp' : 'google',
+    razorpay: {
+      keyId: env.RAZORPAY_KEY_ID || '',
+      keySecret: env.RAZORPAY_KEY_SECRET || '',
+      webhookSecret: env.RAZORPAY_WEBHOOK_SECRET || '',
+    },
   };
+  config.onlinePayments = !!(config.razorpay.keyId && config.razorpay.keySecret);
   if (production && config.jwtSecret.length < 32) {
     throw new Error('JWT_SECRET must be set to at least 32 random characters in production');
   }

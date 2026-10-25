@@ -10,7 +10,7 @@ const HEADLINES = {
   completed: { tag: 'Trip complete', title: 'Trip complete' },
 };
 
-export default function BookingStatus({ booking: b, ratingTags, refresh }) {
+export default function BookingStatus({ booking: b, ratingTags, refresh, config }) {
   const head = HEADLINES[b.status];
   return (
     <section className="stack" style={{ gap: 14 }}>
@@ -27,7 +27,7 @@ export default function BookingStatus({ booking: b, ratingTags, refresh }) {
       {b.status === 'arrived' && b.startOtp && <OtpCard otp={b.startOtp} />}
       {b.status === 'in_progress' && <TripTimer booking={b} />}
       {b.status !== 'completed' && b.status !== 'in_progress' && <Timeline booking={b} />}
-      {b.status === 'completed' && <Completed booking={b} ratingTags={ratingTags} refresh={refresh} />}
+      {b.status === 'completed' && <Completed booking={b} ratingTags={ratingTags} refresh={refresh} onlinePayments={config?.onlinePayments} />}
       {['requested', 'accepted', 'arrived'].includes(b.status) && <CancelButton booking={b} refresh={refresh} />}
     </section>
   );
@@ -134,7 +134,7 @@ function TripTimer({ booking: b }) {
   );
 }
 
-function Completed({ booking: b, ratingTags, refresh }) {
+function Completed({ booking: b, ratingTags, refresh, onlinePayments }) {
   const f = b.fareBreakdown || {};
   const paid = b.paymentStatus === 'collected';
   return (
@@ -153,16 +153,73 @@ function Completed({ booking: b, ratingTags, refresh }) {
         </div>
       </div>
 
-      <div className={paid ? 'card' : 'notice'} style={{ textAlign: 'center' }}>
-        {paid ? (
-          <span className="row" style={{ justifyContent: 'center', fontWeight: 800 }}><Icon name="check" stroke={3} /> Paid in cash — thank you!</span>
-        ) : (
+      {paid ? (
+        <div className="card" style={{ textAlign: 'center' }}>
+          <span className="row" style={{ justifyContent: 'center', fontWeight: 800 }}>
+            <Icon name="check" stroke={3} /> {b.paymentMethod === 'online' ? 'Paid online' : 'Paid in cash'} — thank you!
+          </span>
+        </div>
+      ) : onlinePayments ? (
+        <PayOnline booking={b} refresh={refresh} />
+      ) : (
+        <div className="notice" style={{ textAlign: 'center' }}>
           <span>Please pay <b>{rupees(b.fareTotal)}</b> in cash to {b.driver?.name?.split(' ')[0] || 'your driver'}. They will confirm it in their app.</span>
-        )}
-      </div>
+        </div>
+      )}
 
       {b.rating == null && <RateDriver booking={b} tags={ratingTags} refresh={refresh} />}
     </>
+  );
+}
+
+let checkoutScript;
+function loadCheckout() {
+  checkoutScript ||= new Promise((resolve, reject) => {
+    const el = document.createElement('script');
+    el.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    el.onload = () => resolve(window.Razorpay);
+    el.onerror = () => { checkoutScript = null; reject(new Error('Could not load the payment page. Check your internet and try again.')); };
+    document.head.appendChild(el);
+  });
+  return checkoutScript;
+}
+
+// Pay after the trip: Razorpay checkout (UPI, cards, netbanking) or cash to the driver.
+function PayOnline({ booking: b, refresh }) {
+  const action = useAction();
+  const driverName = b.driver?.name?.split(' ')[0] || 'your driver';
+
+  const pay = () =>
+    action.run(async () => {
+      const [Razorpay, order] = await Promise.all([loadCheckout(), post(`/customer/bookings/${b.id}/pay`)]);
+      await new Promise((resolve, reject) => {
+        const rzp = new Razorpay({
+          key: order.keyId,
+          order_id: order.orderId,
+          amount: order.amount,
+          currency: order.currency,
+          name: 'Drivana',
+          description: order.description,
+          prefill: order.prefill,
+          theme: { color: '#16402B' },
+          handler: (res) => post(`/customer/bookings/${b.id}/pay/verify`, res).then(resolve, reject),
+          modal: { ondismiss: () => resolve() },
+        });
+        rzp.on('payment.failed', (res) => reject(new Error(res.error?.description || 'Payment failed. Please try again.')));
+        rzp.open();
+      });
+      refresh();
+    });
+
+  return (
+    <div className="card" style={{ textAlign: 'center', gap: 10 }}>
+      <b>Pay {rupees(b.fareTotal)}</b>
+      <button className="btn primary block" disabled={action.busy} onClick={pay}>
+        {action.busy ? 'Opening payment…' : 'Pay online · UPI, card'}
+      </button>
+      <ErrorBox error={action.error} />
+      <span className="small muted">or pay {rupees(b.fareTotal)} in cash to {driverName}. They will confirm it in their app.</span>
+    </div>
   );
 }
 

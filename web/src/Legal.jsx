@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Brand } from './ui.jsx';
+import { Brand, rupees } from './ui.jsx';
 
 // Starting-point policies. Have them reviewed before scaling up.
 const UPDATED = '25 October 2026';
@@ -23,7 +23,8 @@ function Page({ title, children }) {
       <footer className="push row small muted" style={{ gap: 16, paddingTop: 24 }}>
         <Link to="/privacy">Privacy Policy</Link>
         <Link to="/terms">Terms of Service</Link>
-        <a href={`mailto:${CONTACT}`}>{CONTACT}</a>
+        <Link to="/refunds">Refunds &amp; Cancellations</Link>
+        <Link to="/contact">Contact &amp; Pricing</Link>
       </footer>
     </main>
   );
@@ -49,7 +50,7 @@ export function Privacy() {
       <h2 className="h2">How we use it</h2>
       <ul>
         <li>To create your account, match you with a driver and run your booking.</li>
-        <li>To calculate fares, record cash payments and settle commission with drivers.</li>
+        <li>To calculate fares, record cash and online payments and settle money with drivers.</li>
         <li>To provide support, resolve disputes, keep the service safe and prevent misuse.</li>
       </ul>
       <p>We do not sell your personal data and we do not use it for advertising.</p>
@@ -62,6 +63,10 @@ export function Privacy() {
         <li>We may disclose information if required by law or to protect someone's safety.</li>
       </ul>
       <p>Our servers are run by our hosting provider, which stores the data on our behalf.</p>
+      <p>
+        Online payments are processed by <b>Razorpay</b>. Your card, UPI or bank details are entered on Razorpay's
+        payment page and are not stored by Drivana; we receive only the payment status and reference.
+      </p>
 
       <h2 className="h2">How long we keep it</h2>
       <p>
@@ -119,11 +124,11 @@ export function Terms() {
       <ul>
         <li>The app shows an estimate before you book. Every booking has a minimum number of hours.</li>
         <li>The final fare is based on the time used: at least the hours you booked, with extra time charged in 30-minute blocks after a short grace period, plus a night charge for trips between 10 pm and 6 am.</li>
-        <li>For now, you pay the final fare <b>in cash to the driver</b> when the trip ends.</li>
+        <li>You pay the final fare when the trip ends, either <b>online in the app</b> (UPI, card or netbanking, processed by Razorpay) or <b>in cash to the driver</b>.</li>
       </ul>
 
       <h2 className="h2">Cancellations</h2>
-      <p>You can cancel in the app before the trip starts. Please cancel as early as possible once a driver is on the way. We may cancel a booking if no driver is available or if we have safety concerns.</p>
+      <p>You can cancel in the app before the trip starts. Please cancel as early as possible once a driver is on the way. We may cancel a booking if no driver is available or if we have safety concerns. See our <Link to="/refunds">Refund &amp; Cancellation Policy</Link>.</p>
 
       <h2 className="h2">Conduct</h2>
       <ul>
@@ -144,6 +149,61 @@ export function Terms() {
         We may update these terms and will show the new date above. These terms are governed by the laws of India, and
         courts in Kannur, Kerala have jurisdiction. Contact: <a href={`mailto:${CONTACT}`}>{CONTACT}</a>.
       </p>
+    </Page>
+  );
+}
+
+export function Refunds() {
+  return (
+    <Page title="Refund & Cancellation Policy">
+      <p>Drivana charges only after a trip ends, so in most cases there is nothing to refund.</p>
+
+      <h2 className="h2">Cancelling a booking</h2>
+      <ul>
+        <li>You can cancel free of charge in the app any time before the trip starts (before you share the start OTP with the driver).</li>
+        <li>Once the trip has started it cannot be cancelled; you pay for the time used, with the minimum booked hours.</li>
+        <li>We may cancel a booking if no driver is available or for safety reasons. You are not charged for bookings we cancel.</li>
+      </ul>
+
+      <h2 className="h2">Refunds</h2>
+      <ul>
+        <li>If you were charged twice, charged the wrong amount, or paid online after already paying the driver in cash, we refund the extra amount in full.</li>
+        <li>If you think a fare is wrong, contact us within 7 days of the trip with your booking code (for example DV-0012). We review the trip and refund any amount charged in error.</li>
+        <li>Approved refunds of online payments go back to the original payment method (UPI, card or bank) through Razorpay, usually within 5–7 working days. Cash payments are refunded by UPI or bank transfer.</li>
+      </ul>
+
+      <h2 className="h2">How to ask</h2>
+      <p>Email <a href={`mailto:${CONTACT}`}>{CONTACT}</a> or call us using the details on our <Link to="/contact">Contact page</Link>.</p>
+    </Page>
+  );
+}
+
+export function Contact({ config = {} }) {
+  const p = config.pricing;
+  const minHours = config.minHours || 2;
+  return (
+    <Page title="Contact & Pricing">
+      <h2 className="h2">Contact us</h2>
+      <ul>
+        <li><b>Business:</b> Drivana — drivers for your own car</li>
+        <li><b>Email:</b> <a href={`mailto:${CONTACT}`}>{CONTACT}</a></li>
+        {config.supportPhone && <li><b>Phone:</b> <a href={`tel:${config.supportPhone}`}>{config.supportPhone}</a></li>}
+        {config.supportWhatsapp && <li><b>WhatsApp:</b> <a href={`https://wa.me/${config.supportWhatsapp.replace(/\D/g, '')}`}>{config.supportWhatsapp}</a></li>}
+        <li><b>Address:</b> Kovvappuram, Kannur, Kerala, India</li>
+      </ul>
+
+      <h2 className="h2">Pricing</h2>
+      {p ? (
+        <ul>
+          <li><b>{rupees(p.baseFare)}</b> for the first {minHours} hours (minimum booking).</li>
+          <li><b>{rupees(p.hourlyRate)}</b> for each extra hour; extra time is charged in 30-minute blocks after {p.graceMinutes} free minutes.</li>
+          <li><b>{rupees(p.nightCharge)}</b> night charge for trips between 10 pm and 6 am.</li>
+          <li>Prices include the driver's service only. Fuel, tolls and parking for your car are paid by you.</li>
+        </ul>
+      ) : (
+        <p>The app shows the full fare estimate before you book.</p>
+      )}
+      <p>You pay after the trip, online (UPI, card, netbanking) or in cash to the driver.</p>
     </Page>
   );
 }

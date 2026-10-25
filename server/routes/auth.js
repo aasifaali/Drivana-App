@@ -21,6 +21,9 @@ export default async function authRoutes(app, { db, config }) {
       supportPhone: s.supportPhone,
       supportWhatsapp: s.supportWhatsapp,
       minHours: s.minHours,
+      onlinePayments: config.onlinePayments,
+      // Public price list for the Contact & Pricing page.
+      pricing: { baseFare: s.baseFare, hourlyRate: s.hourlyRate, graceMinutes: s.graceMinutes, nightCharge: s.nightCharge },
     };
   });
 

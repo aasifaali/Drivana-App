@@ -193,6 +193,13 @@ function DriverHome({ me, refresh }) {
         </div>
       )}
 
+      {me.owed < 0 && (
+        <div className="card" style={{ gap: 4 }}>
+          <b>Drivana owes you {rupees(-me.owed)}</b>
+          <span className="small">Your share of trips the customer paid online. Our team pays it to you by UPI.</span>
+        </div>
+      )}
+
       {me.owed > 0 && (
         <div className={me.blocked ? 'error' : 'card'} style={{ gap: 4 }}>
           <b>{me.blocked ? 'Settle your dues to go online' : 'Commission due to Drivana'}</b>

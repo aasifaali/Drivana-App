@@ -28,7 +28,7 @@ export default function CustomerApp({ config }) {
   let body;
   if (!me.user.phone) body = <PhoneStep onDone={refresh} />;
   else if (me.vehicles.length === 0) body = <CarStep onDone={refresh} first />;
-  else if (me.activeBooking) body = <BookingStatus booking={me.activeBooking} ratingTags={me.ratingTags} refresh={refresh} />;
+  else if (me.activeBooking) body = <BookingStatus booking={me.activeBooking} ratingTags={me.ratingTags} refresh={refresh} config={config} />;
   else {
     body = (
       <>
@@ -81,7 +81,9 @@ function Welcome({ config, onDone }) {
         )}
         <p className="small center" style={{ color: '#A3B3A6', margin: 0 }}>
           By continuing you agree to our <Link to="/terms" style={{ color: '#D8E2D6' }}>Terms</Link> and{' '}
-          <Link to="/privacy" style={{ color: '#D8E2D6' }}>Privacy Policy</Link>
+          <Link to="/privacy" style={{ color: '#D8E2D6' }}>Privacy Policy</Link>.{' '}
+          <Link to="/refunds" style={{ color: '#D8E2D6' }}>Refunds</Link>{' · '}
+          <Link to="/contact" style={{ color: '#D8E2D6' }}>Contact &amp; Pricing</Link>
         </p>
       </div>
     </main>

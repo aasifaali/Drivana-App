@@ -106,6 +106,7 @@ function CollectCash({ booking: b, action, call }) {
         {f.extra > 0 ? ` + extra ${rupees(f.extra)}` : ''}{f.night > 0 ? ` + night ${rupees(f.night)}` : ''}
       </span>
       <span className="small">You keep {rupees(b.driverEarning)} · Drivana commission {rupees(b.commission)}</span>
+      <span className="small muted">The customer can also pay online in their app. This screen closes by itself when they do.</span>
       <ErrorBox error={action.error} />
       <button className="btn primary block" disabled={action.busy} onClick={() => call('cash-collected')}>
         <Icon name="check" stroke={3} /> Cash collected

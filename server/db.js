@@ -122,6 +122,30 @@ const MIGRATIONS = [
   DROP INDEX users_role_phone;
   CREATE UNIQUE INDEX users_driver_phone ON users(phone) WHERE role = 'driver' AND phone IS NOT NULL;
   `,
+  // Online payments (Razorpay). The ledger gains two kinds: 'online_fare'
+  // (negative: Drivana owes the driver their share) and 'payout' (positive:
+  // Drivana paid the driver). SQLite can't change a CHECK, so rebuild the table.
+  `
+  ALTER TABLE bookings ADD COLUMN razorpay_order_id TEXT;
+  ALTER TABLE bookings ADD COLUMN razorpay_payment_id TEXT;
+  ALTER TABLE bookings ADD COLUMN paid_at TEXT;
+  CREATE UNIQUE INDEX bookings_razorpay_order ON bookings(razorpay_order_id) WHERE razorpay_order_id IS NOT NULL;
+
+  CREATE TABLE ledger_entries_new (
+    id INTEGER PRIMARY KEY,
+    driver_id INTEGER NOT NULL REFERENCES users(id),
+    booking_id INTEGER REFERENCES bookings(id),
+    kind TEXT NOT NULL CHECK (kind IN ('commission', 'settlement', 'adjustment', 'online_fare', 'payout')),
+    amount INTEGER NOT NULL,
+    note TEXT,
+    created_by INTEGER REFERENCES users(id),
+    created_at TEXT NOT NULL
+  );
+  INSERT INTO ledger_entries_new SELECT * FROM ledger_entries;
+  DROP TABLE ledger_entries;
+  ALTER TABLE ledger_entries_new RENAME TO ledger_entries;
+  CREATE INDEX ledger_driver ON ledger_entries(driver_id);
+  `,
 ];
 
 export function openDb(file) {

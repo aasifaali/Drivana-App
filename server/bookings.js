@@ -62,6 +62,7 @@ export function bookingView(b, audience) {
     fareBreakdown: b.fare_breakdown ? JSON.parse(b.fare_breakdown) : null,
     paymentMethod: b.payment_method,
     paymentStatus: b.payment_status,
+    paidAt: b.paid_at || b.cash_collected_at,
     rating: b.rating,
     cancelReason: b.cancel_reason,
     cancelledBy: b.cancelled_by,

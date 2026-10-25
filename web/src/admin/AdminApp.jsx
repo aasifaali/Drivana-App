@@ -78,8 +78,9 @@ function Bookings({ config }) {
         <Stat label="Trips in progress" value={o?.inProgress} />
         <Stat label="Drivers online" value={o?.driversOnline} />
         <Stat label="Driver approvals pending" value={o?.pendingApprovals} />
-        <Stat label="Cash not yet confirmed" value={o?.cashPending} />
+        <Stat label="Payment not yet received" value={o?.cashPending} />
         <Stat label="Commission owed by drivers" value={o ? rupees(o.totalOwed) : null} />
+        <Stat label="Owed to drivers (online trips)" value={o ? rupees(o.owedToDrivers) : null} />
       </div>
 
       {scope === 'live' && waiting.length > 0 && (
@@ -128,7 +129,8 @@ function Bookings({ config }) {
                     <td>{rupees(b.fareTotal ?? b.estimate)}</td>
                     <td>
                       <span className={`status ${b.status}`}>{b.status.replace('_', ' ')}</span>
-                      {b.status === 'completed' && b.paymentStatus === 'pending' && <span className="status cash" style={{ marginLeft: 6 }}>cash pending</span>}
+                      {b.status === 'completed' && b.paymentStatus === 'pending' && <span className="status cash" style={{ marginLeft: 6 }}>unpaid</span>}
+                      {b.status === 'completed' && b.paymentStatus === 'collected' && <span className="small muted" style={{ marginLeft: 6 }}>{b.paymentMethod === 'online' ? 'paid online' : 'paid cash'}</span>}
                     </td>
                   </tr>
                 ))}
@@ -241,7 +243,7 @@ function Drivers() {
         <section className="panel">
           <div className="table-wrap">
             <table>
-              <thead><tr><th>Driver</th><th>Status</th><th>Licence</th><th>Drives</th><th>Rating</th><th>Trips</th><th>Owes</th><th>Actions</th></tr></thead>
+              <thead><tr><th>Driver</th><th>Status</th><th>Licence</th><th>Drives</th><th>Rating</th><th>Trips</th><th>Balance</th><th>Actions</th></tr></thead>
               <tbody>
                 {data.map((d) => (
                   <tr key={d.id}>
@@ -252,7 +254,7 @@ function Drivers() {
                     <td>{d.transmissions ? transmissionLabel(d.transmissions) : '—'}</td>
                     <td>{d.rating ?? '—'}</td>
                     <td>{d.trips}</td>
-                    <td style={{ fontWeight: 800, color: d.owed > 0 ? 'var(--warn-text)' : undefined }}>{rupees(d.owed)}</td>
+                    <td style={{ fontWeight: 800, color: d.owed > 0 ? 'var(--warn-text)' : undefined }}><Balance owed={d.owed} /></td>
                     <td>
                       <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
                         {d.status !== 'approved' && d.profileComplete && <button className="btn dark small" disabled={action.busy} onClick={() => setStatus(d, 'approved')}>Approve</button>}
@@ -288,26 +290,40 @@ function ReasonDialog({ driver: d, status, busy, onSubmit, onClose }) {
   );
 }
 
+// Positive = driver owes Drivana; negative = Drivana owes the driver.
+function Balance({ owed }) {
+  if (owed < 0) return <span style={{ color: '#1E6B34' }}>We owe {rupees(-owed)}</span>;
+  return rupees(owed);
+}
+
 function PaymentsDialog({ driver: d, onClose }) {
   const ledger = usePolling(() => api(`/admin/drivers/${d.id}/ledger`), 0);
   const [amount, setAmount] = useState('');
   const [note, setNote] = useState('');
   const action = useAction();
   const owed = (ledger.data || []).reduce((sum, e) => sum + e.amount, 0);
+  const payout = owed < 0;
 
   const record = (e) => {
     e.preventDefault();
     action.run(async () => {
-      await post(`/admin/drivers/${d.id}/settlement`, { amount: Number(amount), note: note || 'UPI payment received' });
+      await post(`/admin/drivers/${d.id}/settlement`, {
+        amount: Number(amount),
+        direction: payout ? 'payout' : 'settlement',
+        note: note || (payout ? 'Paid to driver by UPI' : 'UPI payment received'),
+      });
       setAmount(''); setNote(''); ledger.refresh();
     });
   };
 
   return (
     <Dialog title={`Payments · ${d.name || d.phone}`} onClose={onClose}>
-      <div className="stat" style={{ background: 'var(--ground)' }}><span className="small">Currently owes Drivana</span><b>{rupees(owed)}</b></div>
+      <div className="stat" style={{ background: 'var(--ground)' }}>
+        <span className="small">{payout ? 'Drivana owes this driver (online trips)' : 'Currently owes Drivana'}</span>
+        <b>{rupees(Math.abs(owed))}</b>
+      </div>
       <form className="stack" onSubmit={record}>
-        <b>Record a payment from the driver</b>
+        <b>{payout ? 'Record a payment you made to the driver' : 'Record a payment from the driver'}</b>
         <div className="row">
           <input className="input grow" type="number" min="1" inputMode="numeric" placeholder="Amount ₹" value={amount} onChange={(e) => setAmount(e.target.value)} required aria-label="Amount" />
           <input className="input grow" placeholder="Note (e.g. UPI ref)" value={note} onChange={(e) => setNote(e.target.value)} aria-label="Note" />
@@ -321,7 +337,7 @@ function PaymentsDialog({ driver: d, onClose }) {
         {(ledger.data || []).map((e) => (
           <div key={e.id} className="spread small">
             <span><span className="muted">{dateTime(e.at)}</span> · {e.note || e.kind}</span>
-            <b style={{ color: e.amount < 0 ? '#1E6B34' : undefined }}>{e.amount < 0 ? `− ${rupees(-e.amount)}` : rupees(e.amount)}</b>
+            <b style={{ color: e.amount < 0 ? '#1E6B34' : undefined }}>{e.amount < 0 ? `− ${rupees(-e.amount)}` : `+ ${rupees(e.amount)}`}</b>
           </div>
         ))}
       </div>
