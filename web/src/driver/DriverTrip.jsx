@@ -69,7 +69,7 @@ function Running({ booking: b }) {
   const pct = Math.min(100, (elapsed / (b.bookedHours * 3600000)) * 100);
   return (
     <div className="card" style={{ alignItems: 'center', textAlign: 'center', padding: 24 }}>
-      <span className="small" style={{ color: 'var(--mint)', fontWeight: 900, letterSpacing: '0.08em' }}>TRIP IN PROGRESS</span>
+      <span className="small" style={{ color: 'var(--gold)', fontWeight: 900, letterSpacing: '0.08em' }}>TRIP IN PROGRESS</span>
       <span className="big-number" style={{ fontSize: 56 }}>{duration(elapsed)}</span>
       <span className="small muted">of {b.bookedHours} hr booked · started {time(b.startedAt)}</span>
       <div className="progress" style={{ width: '100%' }}><div style={{ width: `${pct}%` }} /></div>
@@ -96,7 +96,7 @@ function CollectCash({ booking: b, action, call }) {
   const f = b.fareBreakdown || {};
   return (
     <div className="card inverse" style={{ alignItems: 'center', textAlign: 'center', padding: 24 }}>
-      <span className="small" style={{ color: 'var(--mint)', fontWeight: 900, letterSpacing: '0.08em' }}>COLLECT IN CASH</span>
+      <span className="small" style={{ color: 'var(--gold)', fontWeight: 900, letterSpacing: '0.08em' }}>COLLECT IN CASH</span>
       <span className="big-number" style={{ fontSize: 56 }}>{rupees(b.fareTotal)}</span>
       <span className="small muted">
         {minutesLabel(f.minutes || 0)} · booked {rupees(f.booked)}

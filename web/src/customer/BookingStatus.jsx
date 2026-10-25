@@ -16,7 +16,7 @@ export default function BookingStatus({ booking: b, ratingTags, refresh }) {
     <section className="stack" style={{ gap: 14 }}>
       <div className="stack" style={{ gap: 6 }}>
         <span className="small muted">Booking {b.code}</span>
-        <span className="tag mint" style={{ alignSelf: 'flex-start' }}>{head.tag}</span>
+        <span className="tag leaf" style={{ alignSelf: 'flex-start' }}>{head.tag}</span>
         <h1 className="h1">{head.title}</h1>
         <span className="muted">{b.pickupAddress}</span>
       </div>
@@ -74,7 +74,7 @@ function OtpCard({ otp }) {
     <div className="card inverse">
       <div className="spread" style={{ alignItems: 'flex-start' }}>
         <b>Start trip OTP</b>
-        <span className="small" style={{ color: '#B8BEC6', textAlign: 'right' }}>Share only when the driver<br />is at your car</span>
+        <span className="small" style={{ color: '#BFCCC1', textAlign: 'right' }}>Share only when the driver<br />is at your car</span>
       </div>
       <div className="otp-digits" aria-label={`OTP ${otp.split('').join(' ')}`}>
         {otp.split('').map((d, i) => <span key={i}>{d}</span>)}
@@ -112,9 +112,9 @@ function TripTimer({ booking: b }) {
   const pct = Math.min(100, (elapsed / (b.bookedHours * 3600000)) * 100);
   return (
     <div className="card inverse" style={{ alignItems: 'center', textAlign: 'center' }}>
-      <span className="small" style={{ color: 'var(--mint)', fontWeight: 800, letterSpacing: '0.08em' }}>TIME USED</span>
+      <span className="small" style={{ color: 'var(--gold)', fontWeight: 800, letterSpacing: '0.08em' }}>TIME USED</span>
       <span className="big-number">{duration(elapsed)}</span>
-      <span className="small" style={{ color: '#B8BEC6' }}>of {b.bookedHours} hr booked · started {time(b.startedAt)}</span>
+      <span className="small" style={{ color: '#BFCCC1' }}>of {b.bookedHours} hr booked · started {time(b.startedAt)}</span>
       <div className="progress" style={{ width: '100%' }}><div style={{ width: `${pct}%` }} /></div>
       {pct >= 100 && <span className="small" style={{ color: '#FFC83D' }}>Extra time is billed per 30 minutes</span>}
     </div>

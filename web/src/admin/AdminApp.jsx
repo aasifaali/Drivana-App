@@ -17,14 +17,14 @@ export default function AdminApp({ config }) {
     <div className="admin">
       <nav className="admin-nav" aria-label="Dashboard">
         <span className="brand" style={{ color: '#FFFFFF', padding: '0 12px 16px' }}>
-          <img src="/brand/drivana-mark-mint.png" alt="" /> Drivana Ops
+          <img src="/brand/drivana-mark-gold.png" alt="" /> Drivana Ops
         </span>
         <NavLink to="/admin" end className={link}>Bookings</NavLink>
         <NavLink to="/admin/drivers" className={link}>Drivers</NavLink>
         <NavLink to="/admin/settings" className={link}>Settings</NavLink>
         <span style={{ flex: 1 }} />
-        <span className="small" style={{ color: '#9AA1AA', padding: '0 12px' }}>{me.user.email}</span>
-        <button className="btn text" style={{ color: '#D5D9DE', justifyContent: 'flex-start' }} onClick={logout}><Icon name="logout" size={18} /> Sign out</button>
+        <span className="small" style={{ color: '#A3B3A6', padding: '0 12px' }}>{me.user.email}</span>
+        <button className="btn text" style={{ color: '#D8E2D6', justifyContent: 'flex-start' }} onClick={logout}><Icon name="logout" size={18} /> Sign out</button>
       </nav>
       <main className="admin-main">
         <Routes>
@@ -40,7 +40,7 @@ export default function AdminApp({ config }) {
 function AdminLogin({ config, onDone }) {
   return (
     <main className="app" style={{ justifyContent: 'center' }}>
-      <span className="brand"><img src="/brand/drivana-mark-navy.png" alt="" /> Drivana Ops</span>
+      <span className="brand"><img src="/brand/drivana-mark-forest.png" alt="" /> Drivana Ops</span>
       <h1 className="h1">Sign in to the dashboard</h1>
       <p className="muted" style={{ margin: 0 }}>Only Google accounts listed in ADMIN_EMAILS can sign in.</p>
       <GoogleSignIn clientId={config.googleClientId} role="admin" onDone={onDone} theme="filled_black" />
@@ -321,7 +321,7 @@ function PaymentsDialog({ driver: d, onClose }) {
         {(ledger.data || []).map((e) => (
           <div key={e.id} className="spread small">
             <span><span className="muted">{dateTime(e.at)}</span> · {e.note || e.kind}</span>
-            <b style={{ color: e.amount < 0 ? '#0A5C3D' : undefined }}>{e.amount < 0 ? `− ${rupees(-e.amount)}` : rupees(e.amount)}</b>
+            <b style={{ color: e.amount < 0 ? '#1E6B34' : undefined }}>{e.amount < 0 ? `− ${rupees(-e.amount)}` : rupees(e.amount)}</b>
           </div>
         ))}
       </div>
@@ -381,7 +381,7 @@ function Settings() {
       <ErrorBox error={action.error} />
       <div className="row">
         <button className="btn dark" disabled={action.busy}>Save settings</button>
-        {saved && <span style={{ color: '#0A5C3D', fontWeight: 800 }}>Saved</span>}
+        {saved && <span style={{ color: '#1E6B34', fontWeight: 800 }}>Saved</span>}
       </div>
     </form>
   );

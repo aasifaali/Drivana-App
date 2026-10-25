@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, post, put } from '../api.js';
 import {
-  Brand, DevLogin, ErrorBox, GoogleSignIn, Icon, Splash, SupportLinks,
+  Brand, DevLogin, ErrorBox, GoogleSignIn, Icon, KeralaScene, Splash, SupportLinks,
   dateTime, getPosition, rupees, transmissionLabel, useAction, useLocationPermission, useManifest, usePolling,
 } from '../ui.jsx';
 import BookingStatus from './BookingStatus.jsx';
@@ -60,8 +60,9 @@ function Welcome({ config, onDone }) {
   }, []);
   return (
     <main className="app welcome">
+      <KeralaScene />
       <div className="stack grow" style={{ justifyContent: 'center', gap: 22 }}>
-        <img src="/brand/drivana-mark-mint.png" alt="" width="88" height="88" />
+        <img src="/brand/drivana-mark-gold.png" alt="" width="88" height="88" />
         <div className="stack" style={{ gap: 10 }}>
           <h1 className="wordmark">Drivana</h1>
           <div className="tagline">Your car.<br />Your driver.</div>
@@ -78,9 +79,9 @@ function Welcome({ config, onDone }) {
         {!config.googleClientId && !config.devLogin && (
           <div className="notice">Sign-in is not set up yet. Add GOOGLE_CLIENT_ID to the server's .env file.</div>
         )}
-        <p className="small center" style={{ color: '#9AA1AA', margin: 0 }}>
-          By continuing you agree to our <Link to="/terms" style={{ color: '#D5D9DE' }}>Terms</Link> and{' '}
-          <Link to="/privacy" style={{ color: '#D5D9DE' }}>Privacy Policy</Link>
+        <p className="small center" style={{ color: '#A3B3A6', margin: 0 }}>
+          By continuing you agree to our <Link to="/terms" style={{ color: '#D8E2D6' }}>Terms</Link> and{' '}
+          <Link to="/privacy" style={{ color: '#D8E2D6' }}>Privacy Policy</Link>
         </p>
       </div>
     </main>
@@ -234,7 +235,7 @@ function BookScreen({ me, config, refresh }) {
           </button>
         </div>
         {coords ? (
-          <span className="small" style={{ color: '#0A5C3D', fontWeight: 700 }}>Location pinned — add a house name or landmark to help your driver</span>
+          <span className="small" style={{ color: '#1E6B34', fontWeight: 700 }}>Location pinned — add a house name or landmark to help your driver</span>
         ) : locate.busy || autoLocating ? (
           <span className="small muted">Finding your location… allow location if your browser asks</span>
         ) : (permission === 'denied' || autoFailed) && !locate.error ? (
@@ -248,7 +249,7 @@ function BookScreen({ me, config, refresh }) {
         <div className="stack" style={{ gap: 8 }}>
           {me.vehicles.map((v) => (
             <label key={v.id} className="card outline" style={{ position: 'relative', flexDirection: 'row', alignItems: 'center', padding: '12px 16px', cursor: 'pointer',
-              borderColor: v.id === vehicleId ? 'var(--navy)' : undefined, borderWidth: v.id === vehicleId ? 2 : 1 }}>
+              borderColor: v.id === vehicleId ? 'var(--forest)' : undefined, borderWidth: v.id === vehicleId ? 2 : 1 }}>
               <input type="radio" name="vehicle" checked={v.id === vehicleId} onChange={() => setVehicleId(v.id)}
                 style={{ position: 'absolute', opacity: 0 }} />
               <span className="icon-btn" style={{ borderRadius: 12, border: 'none', background: 'var(--ground)' }}><Icon name="car" /></span>

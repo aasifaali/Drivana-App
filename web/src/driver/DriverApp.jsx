@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, post, put } from '../api.js';
 import {
-  Brand, DevLogin, ErrorBox, Icon, PhoneOtpForm, Splash, SupportLinks,
+  Brand, DevLogin, ErrorBox, Icon, KeralaScene, PhoneOtpForm, Splash, SupportLinks,
   dateTime, getPosition, rupees, transmissionLabel, useAction, useLocationPermission, useManifest, usePolling,
 } from '../ui.jsx';
 import DriverTrip from './DriverTrip.jsx';
@@ -44,7 +44,7 @@ export default function DriverApp({ config }) {
   return (
     <main className="app dark">
       <header className="topbar">
-        <Brand variant="mint" label="Drivana Partner" />
+        <Brand variant="gold" label="Drivana Partner" />
         <button className="icon-btn" onClick={logout} aria-label="Sign out" title="Sign out"><Icon name="logout" /></button>
       </header>
       {body}
@@ -55,8 +55,9 @@ export default function DriverApp({ config }) {
 
 function DriverLogin({ config, onDone }) {
   return (
-    <main className="app dark">
-      <header className="topbar"><Brand variant="mint" label="Drivana Partner" /></header>
+    <main className="app dark welcome">
+      <KeralaScene />
+      <header className="topbar"><Brand variant="gold" label="Drivana Partner" /></header>
       <div className="stack grow" style={{ justifyContent: 'center', gap: 20 }}>
         <h1 className="h1" style={{ fontSize: 34 }}>Drive with Drivana</h1>
         <p className="muted" style={{ margin: 0, fontSize: 17 }}>Earn by driving customers' own cars, on your schedule. Sign in with your mobile number.</p>
@@ -70,7 +71,7 @@ function DriverLogin({ config, onDone }) {
 function Message({ title, text }) {
   return (
     <section className="card" style={{ textAlign: 'center', alignItems: 'center', padding: 28 }}>
-      <img src="/brand/drivana-mark-mint.png" alt="" width="56" height="56" />
+      <img src="/brand/drivana-mark-gold.png" alt="" width="56" height="56" />
       <h1 className="h2" style={{ fontSize: 22 }}>{title}</h1>
       <p className="muted" style={{ margin: 0 }}>{text}</p>
     </section>
@@ -187,9 +188,9 @@ function DriverHome({ me, refresh }) {
         </div>
       )}
 
-      <div className="tabbar" role="group" aria-label="Sections" style={{ background: 'var(--navy-2)' }}>
-        <button aria-pressed={tab === 'requests'} onClick={() => setTab('requests')} style={tab === 'requests' ? { background: 'var(--mint)', color: 'var(--navy)' } : undefined}>Requests</button>
-        <button aria-pressed={tab === 'history'} onClick={() => setTab('history')} style={tab === 'history' ? { background: 'var(--mint)', color: 'var(--navy)' } : undefined}>My trips</button>
+      <div className="tabbar" role="group" aria-label="Sections" style={{ background: 'var(--forest-2)' }}>
+        <button aria-pressed={tab === 'requests'} onClick={() => setTab('requests')} style={tab === 'requests' ? { background: 'var(--gold)', color: 'var(--forest)' } : undefined}>Requests</button>
+        <button aria-pressed={tab === 'history'} onClick={() => setTab('history')} style={tab === 'history' ? { background: 'var(--gold)', color: 'var(--forest)' } : undefined}>My trips</button>
       </div>
 
       {tab === 'history' ? <History /> : online ? <Requests refresh={refresh} /> : (
@@ -237,13 +238,13 @@ function Requests({ refresh }) {
     <ul className="list">
       {data.map((r) => (
         <li key={r.id} className="card inverse">
-          <span className="small" style={{ color: 'var(--mint)', fontWeight: 900, letterSpacing: '0.08em' }}>NEW BOOKING</span>
+          <span className="small" style={{ color: 'var(--gold)', fontWeight: 900, letterSpacing: '0.08em' }}>NEW BOOKING</span>
           <div className="stack" style={{ gap: 2 }}>
             <span className="small muted">You earn about</span>
             <span className="big-number">{rupees(r.estimatedEarning)}</span>
-            <span className="small" style={{ color: '#C9CED4' }}>for {r.bookedHours} hr · extra time paid per 30 min</span>
+            <span className="small" style={{ color: '#C7D1C3' }}>for {r.bookedHours} hr · extra time paid per 30 min</span>
           </div>
-          <div className="stack" style={{ background: 'var(--navy-2)', borderRadius: 18, padding: 16, gap: 12 }}>
+          <div className="stack" style={{ background: 'var(--forest-2)', borderRadius: 18, padding: 16, gap: 12 }}>
             <div className="row" style={{ alignItems: 'flex-start' }}><Icon name="pin" />
               <div className="stack" style={{ gap: 2 }}><b>{r.pickupAddress}</b>
                 <span className="small muted">{r.distanceKm != null ? `${r.distanceKm} km away` : 'Distance unknown'} · {r.customer.name}</span></div></div>
@@ -251,7 +252,7 @@ function Requests({ refresh }) {
             <div className="row"><Icon name="clock" /><b>Start now · {r.bookedHours} hours</b></div>
           </div>
           <div className="chips three">
-            <button className="btn small" style={{ background: 'var(--navy-3)', color: '#FFFFFF', minHeight: 60 }} disabled={action.busy} onClick={() => decline(r.id)}>Decline</button>
+            <button className="btn small" style={{ background: 'var(--forest-3)', color: '#FFFFFF', minHeight: 60 }} disabled={action.busy} onClick={() => decline(r.id)}>Decline</button>
             <button className="btn primary" style={{ gridColumn: 'span 2', minHeight: 60 }} disabled={action.busy} onClick={() => accept(r.id)}>Accept</button>
           </div>
         </li>

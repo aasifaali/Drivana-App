@@ -31,13 +31,13 @@ export function Icon({ name, size = 20, stroke = 2, ...rest }) {
 export function Star({ filled, size = 32 }) {
   return (
     <svg aria-hidden="true" width={size} height={size} viewBox="0 0 24 24" fill={filled ? 'currentColor' : 'none'}
-      stroke={filled ? 'none' : '#9AA1AA'} strokeWidth="1.6" strokeLinejoin="round">
+      stroke={filled ? 'none' : '#A3B3A6'} strokeWidth="1.6" strokeLinejoin="round">
       <path d="M12 3l2.6 5.6 6 .7-4.5 4.1 1.2 6L12 16.4 6.7 19.4l1.2-6L3.4 9.3l6-.7z" />
     </svg>
   );
 }
 
-export function Brand({ variant = 'navy', label = 'Drivana' }) {
+export function Brand({ variant = 'forest', label = 'Drivana' }) {
   return (
     <span className="brand">
       <img src={`/brand/drivana-mark-${variant}.png`} alt="" />
@@ -313,6 +313,39 @@ export function SupportLinks({ config }) {
           <Icon name="chat" size={18} /> WhatsApp support
         </a>
       )}
+    </div>
+  );
+}
+
+// Coconut palms and backwaters behind the welcome screens.
+function Palm({ transform }) {
+  return (
+    <g transform={transform}>
+      <path d="M150 260 C 140 190, 120 130, 112 72" fill="none" stroke="currentColor" strokeWidth="9" strokeLinecap="round" />
+      <path d="M112 70 C 140 55, 175 65, 195 95 C 170 78, 140 72, 112 76Z" />
+      <path d="M112 70 C 85 55, 50 62, 28 92 C 55 76, 85 72, 112 76Z" />
+      <path d="M112 70 C 125 40, 155 25, 185 30 C 155 38, 130 52, 114 74Z" />
+      <path d="M112 70 C 98 38, 70 22, 40 24 C 70 34, 94 50, 110 74Z" />
+      <path d="M112 72 C 150 75, 175 100, 182 135 C 165 108, 140 88, 112 78Z" />
+      <path d="M112 72 C 75 76, 52 100, 44 132 C 62 106, 86 88, 112 78Z" />
+      <circle cx="107" cy="81" r="4.5" /><circle cx="117" cy="83" r="4.5" />
+    </g>
+  );
+}
+
+export function KeralaScene() {
+  return (
+    <div className="kerala-scene" aria-hidden="true">
+      <svg className="palms" viewBox="0 0 260 280" fill="currentColor">
+        <Palm transform="translate(60 0)" />
+        <Palm transform="translate(0 70) scale(0.7)" />
+      </svg>
+      <svg className="backwaters" viewBox="0 0 390 140" preserveAspectRatio="none">
+        <path d="M0 62 C 60 30, 120 42, 180 56 S 300 34, 390 52 V140 H0Z" fill="#16402B" />
+        <path d="M0 92 Q 32 80 65 92 T 130 92 T 195 92 T 260 92 T 325 92 T 390 92 V140 H0Z" fill="#1B4A31" />
+        <path d="M0 110 Q 32 100 65 110 T 130 110 T 195 110 T 260 110 T 325 110 T 390 110" fill="none" stroke="#F2C14E" strokeOpacity="0.35" strokeWidth="1.5" />
+        <path d="M0 124 Q 32 116 65 124 T 130 124 T 195 124 T 260 124 T 325 124 T 390 124" fill="none" stroke="#3FA34D" strokeOpacity="0.5" strokeWidth="1.5" />
+      </svg>
     </div>
   );
 }
