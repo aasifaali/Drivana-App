@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api, post, put } from '../api.js';
 import {
   Brand, DevLogin, ErrorBox, GoogleSignIn, Icon, Splash, SupportLinks,
-  dateTime, getPosition, rupees, transmissionLabel, useAction, useManifest, usePolling,
+  dateTime, getPosition, rupees, transmissionLabel, useAction, useLocationPermission, useManifest, usePolling,
 } from '../ui.jsx';
 import BookingStatus from './BookingStatus.jsx';
 
@@ -188,6 +188,22 @@ function BookScreen({ me, config, refresh }) {
       if (!address) setAddress('My current location');
     });
 
+  // Ask for location as soon as the booking screen opens, so the driver gets
+  // an exact pin. Stays quiet if the customer has blocked it.
+  const permission = useLocationPermission();
+  const asked = useRef(false);
+  const [autoLocating, setAutoLocating] = useState(false);
+  const [autoFailed, setAutoFailed] = useState(false);
+  useEffect(() => {
+    if (asked.current || permission === 'unknown' && navigator.permissions || permission === 'denied') return;
+    asked.current = true;
+    setAutoLocating(true);
+    getPosition()
+      .then(setCoords)
+      .catch(() => setAutoFailed(true))
+      .finally(() => setAutoLocating(false));
+  }, [permission]); // eslint-disable-line react-hooks/exhaustive-deps
+
   const submit = (e) => {
     e.preventDefault();
     book.run(async () => {
@@ -196,13 +212,14 @@ function BookScreen({ me, config, refresh }) {
     });
   };
 
+  const firstName = me.user.name && !me.user.name.includes('@') ? me.user.name.split(' ')[0] : '';
   const carDone = useCallback(() => { setAddingCar(false); refresh(); }, [refresh]);
   if (addingCar) return <CarStep onDone={carDone} onCancel={() => setAddingCar(false)} />;
 
   return (
     <form className="stack" style={{ gap: 18 }} onSubmit={submit}>
       <div>
-        <h1 className="h1">Need a driver{me.user.name ? `, ${me.user.name.split(' ')[0]}` : ''}?</h1>
+        <h1 className="h1">Need a driver{firstName ? `, ${firstName}` : ''}?</h1>
         <span className="muted" style={{ fontWeight: 700 }}>Your car. Your driver.</span>
       </div>
 
@@ -216,7 +233,13 @@ function BookScreen({ me, config, refresh }) {
             <Icon name="locate" />
           </button>
         </div>
-        {coords && <span className="small" style={{ color: '#0A5C3D', fontWeight: 700 }}>Location pinned — add a landmark to help your driver</span>}
+        {coords ? (
+          <span className="small" style={{ color: '#0A5C3D', fontWeight: 700 }}>Location pinned — add a house name or landmark to help your driver</span>
+        ) : locate.busy || autoLocating ? (
+          <span className="small muted">Finding your location… allow location if your browser asks</span>
+        ) : (permission === 'denied' || autoFailed) && !locate.error ? (
+          <span className="small muted">Couldn't get your location. Type your address, or tap the pin button to try again.</span>
+        ) : null}
         <ErrorBox error={locate.error} />
       </div>
 

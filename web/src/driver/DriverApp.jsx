@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { api, post, put } from '../api.js';
 import {
   Brand, DevLogin, ErrorBox, Icon, PhoneOtpForm, Splash, SupportLinks,
-  dateTime, getPosition, rupees, transmissionLabel, useAction, useManifest, usePolling,
+  dateTime, getPosition, rupees, transmissionLabel, useAction, useLocationPermission, useManifest, usePolling,
 } from '../ui.jsx';
 import DriverTrip from './DriverTrip.jsx';
 
@@ -141,11 +141,19 @@ function DriverHome({ me, refresh }) {
   const toggle = useAction();
   const [tab, setTab] = useState('requests');
   useLiveLocation(online);
+  const permission = useLocationPermission();
+  const [locationError, setLocationError] = useState(null);
 
   const setOnline = (value) =>
     toggle.run(async () => {
       let pos = {};
-      if (value) pos = await getPosition().catch(() => ({}));
+      setLocationError(null);
+      if (value) {
+        pos = await getPosition().catch((err) => {
+          setLocationError(err.message);
+          return {};
+        });
+      }
       await post('/driver/status', { online: value, ...pos });
       refresh();
     });
@@ -163,6 +171,12 @@ function DriverHome({ me, refresh }) {
         </button>
       </div>
       <ErrorBox error={toggle.error} />
+      {online && (permission === 'denied' || locationError) && (
+        <div className="error" style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+          <b>Turn on location to get nearby bookings</b>
+          <span className="small">{locationError || 'Location is blocked for this app. Allow it in your browser settings, then go offline and online again.'}</span>
+        </div>
+      )}
 
       {me.owed > 0 && (
         <div className={me.blocked ? 'error' : 'card'} style={{ gap: 4 }}>

@@ -132,15 +132,43 @@ export function useNow(intervalMs = 1000) {
   return now;
 }
 
-export function getPosition() {
+const LOCATION_BLOCKED_HELP = /iPhone|iPad/.test(navigator.userAgent)
+  ? 'Location is blocked. On iPhone: Settings › Privacy & Security › Location Services › Safari Websites › While Using, then try again.'
+  : 'Location is blocked. Tap the icon to the left of the web address › Permissions (or Site settings) › Location › Allow, then try again.';
+
+export function getPosition({ timeout = 10000 } = {}) {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) return reject(new Error('Location is not available on this device'));
     navigator.geolocation.getCurrentPosition(
       (p) => resolve({ lat: p.coords.latitude, lng: p.coords.longitude }),
-      () => reject(new Error('Allow location access to use this')),
-      { enableHighAccuracy: true, timeout: 6000, maximumAge: 60000 },
+      (err) => {
+        const e = new Error(
+          err.code === err.PERMISSION_DENIED
+            ? LOCATION_BLOCKED_HELP
+            : 'Could not find your location. Turn on location (GPS) on your phone and try again.',
+        );
+        e.denied = err.code === err.PERMISSION_DENIED;
+        reject(e);
+      },
+      { enableHighAccuracy: true, timeout, maximumAge: 60000 },
     );
   });
+}
+
+// 'granted' | 'prompt' | 'denied' | 'unknown'; updates if the user changes it.
+export function useLocationPermission() {
+  const [state, setState] = useState('unknown');
+  useEffect(() => {
+    let status;
+    const update = () => setState(status.state);
+    navigator.permissions?.query({ name: 'geolocation' }).then((s) => {
+      status = s;
+      update();
+      s.addEventListener('change', update);
+    }).catch(() => {});
+    return () => status?.removeEventListener('change', update);
+  }, []);
+  return state;
 }
 
 // Points the install manifest and icon at the right app (customer vs driver).
