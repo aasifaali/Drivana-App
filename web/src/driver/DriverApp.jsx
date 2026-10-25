@@ -36,7 +36,7 @@ export default function DriverApp({ config }) {
   } else if (p.status === 'pending') {
     body = <Message title="Thanks! We're checking your details" text="Our team will verify your licence and call you. Once approved, you can go online and start getting bookings." />;
   } else if (me.activeBooking) {
-    body = <DriverTrip booking={me.activeBooking} refresh={refresh} />;
+    body = <DriverTrip booking={me.activeBooking} refresh={refresh} onlinePayments={config.onlinePayments} />;
   } else {
     body = <DriverHome me={me} refresh={refresh} />;
   }

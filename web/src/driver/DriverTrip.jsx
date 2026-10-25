@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { post } from '../api.js';
 import { ErrorBox, Icon, duration, initials, minutesLabel, rupees, time, transmissionLabel, useAction, useNow } from '../ui.jsx';
 
-export default function DriverTrip({ booking: b, refresh }) {
+export default function DriverTrip({ booking: b, refresh, onlinePayments }) {
   const action = useAction();
   const call = (path, body) => action.run(async () => { await post(`/driver/bookings/${b.id}/${path}`, body); refresh(); });
 
@@ -10,7 +10,7 @@ export default function DriverTrip({ booking: b, refresh }) {
     <section className="stack" style={{ gap: 14 }}>
       <span className="small muted">Booking {b.code}</span>
       {b.status === 'in_progress' && <Running booking={b} />}
-      {b.status === 'completed' ? <CollectCash booking={b} action={action} call={call} /> : <CustomerCard booking={b} />}
+      {b.status === 'completed' ? <Payment booking={b} action={action} call={call} onlinePayments={onlinePayments} /> : <CustomerCard booking={b} />}
       {b.status === 'accepted' && (
         <button className="btn primary block" disabled={action.busy} onClick={() => call('arrived')}>I've reached the car</button>
       )}
@@ -95,6 +95,36 @@ function EndTrip({ action, call }) {
   );
 }
 
+// After the trip the customer chooses how to pay. Cash is collected only once
+// they pick it; until then the driver waits (with a confirmed fallback).
+function Payment({ booking: b, action, call, onlinePayments }) {
+  const [confirming, setConfirming] = useState(false);
+  if (!onlinePayments || b.paymentChoice === 'cash') return <CollectCash booking={b} action={action} call={call} />;
+  const f = b.fareBreakdown || {};
+  return (
+    <div className="card inverse" style={{ alignItems: 'center', textAlign: 'center', padding: 24 }}>
+      <span className="small" style={{ color: 'var(--gold)', fontWeight: 900, letterSpacing: '0.08em' }}>
+        {b.paymentChoice === 'online' ? 'CUSTOMER IS PAYING ONLINE' : 'WAITING FOR THE CUSTOMER TO PAY'}
+      </span>
+      <span className="big-number" style={{ fontSize: 56 }}>{rupees(b.fareTotal)}</span>
+      <span className="small muted">{minutesLabel(f.minutes || 0)} · you earn {rupees(b.driverEarning)}</span>
+      <span className="small">Ask the customer to open Drivana and choose <b>Pay online</b> or <b>I'll pay cash</b>. This screen updates by itself.</span>
+      <ErrorBox error={action.error} />
+      {confirming ? (
+        <div className="stack" style={{ gap: 8, width: '100%' }}>
+          <span className="small">Only confirm if you have {rupees(b.fareTotal)} cash in hand.</span>
+          <button className="btn primary block" disabled={action.busy} onClick={() => call('cash-collected')}>
+            <Icon name="check" stroke={3} /> Yes, I received {rupees(b.fareTotal)} cash
+          </button>
+          <button className="btn text small" onClick={() => setConfirming(false)}>Back</button>
+        </div>
+      ) : (
+        <button className="btn ghost small" style={{ color: '#fff' }} onClick={() => setConfirming(true)}>Customer paid me cash</button>
+      )}
+    </div>
+  );
+}
+
 function CollectCash({ booking: b, action, call }) {
   const f = b.fareBreakdown || {};
   return (
@@ -106,7 +136,6 @@ function CollectCash({ booking: b, action, call }) {
         {f.extra > 0 ? ` + extra ${rupees(f.extra)}` : ''}{f.night > 0 ? ` + night ${rupees(f.night)}` : ''}
       </span>
       <span className="small">You keep {rupees(b.driverEarning)} · Drivana commission {rupees(b.commission)}</span>
-      <span className="small muted">The customer can also pay online in their app. This screen closes by itself when they do.</span>
       <ErrorBox error={action.error} />
       <button className="btn primary block" disabled={action.busy} onClick={() => call('cash-collected')}>
         <Icon name="check" stroke={3} /> Cash collected

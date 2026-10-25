@@ -189,6 +189,8 @@ function PayOnline({ booking: b, refresh }) {
   const action = useAction();
   const driverName = b.driver?.name?.split(' ')[0] || 'your driver';
 
+  const payCash = () => action.run(async () => { await post(`/customer/bookings/${b.id}/pay-cash`); refresh(); });
+
   const pay = () =>
     action.run(async () => {
       const [Razorpay, order] = await Promise.all([loadCheckout(), post(`/customer/bookings/${b.id}/pay`)]);
@@ -211,14 +213,24 @@ function PayOnline({ booking: b, refresh }) {
       refresh();
     });
 
+  if (b.paymentChoice === 'cash') {
+    return (
+      <div className="notice" style={{ textAlign: 'center', gap: 8 }}>
+        <span>Please pay <b>{rupees(b.fareTotal)}</b> in cash to {driverName}. They will confirm it in their app.</span>
+        <button className="btn text small" disabled={action.busy} onClick={pay}>Pay online instead</button>
+        <ErrorBox error={action.error} />
+      </div>
+    );
+  }
+
   return (
     <div className="card" style={{ textAlign: 'center', gap: 10 }}>
       <b>Pay {rupees(b.fareTotal)}</b>
       <button className="btn primary block" disabled={action.busy} onClick={pay}>
-        {action.busy ? 'Opening payment…' : 'Pay online · UPI, card'}
+        {action.busy ? 'Opening payment…' : 'Pay online now'}
       </button>
+      <button className="btn ghost block" disabled={action.busy} onClick={payCash}>I'll pay cash to {driverName}</button>
       <ErrorBox error={action.error} />
-      <span className="small muted">or pay {rupees(b.fareTotal)} in cash to {driverName}. They will confirm it in their app.</span>
     </div>
   );
 }

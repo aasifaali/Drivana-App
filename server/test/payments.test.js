@@ -122,6 +122,16 @@ test('online payment after the trip', async (t) => {
   assert.equal(r.statusCode, 200);
   assert.equal((await customer('GET', `/api/customer/bookings/${trip2.id}`)).data.paymentMethod, 'online');
 
+  // Customer chooses cash: the driver is told to collect it.
+  const trip3 = await finishedTrip({ customer, driver }, vehicleId);
+  assert.equal((await driver('GET', '/api/driver/me')).data.activeBooking.paymentChoice, null, 'driver waits for the customer');
+  r = await customer('POST', `/api/customer/bookings/${trip3.id}/pay-cash`);
+  assert.equal(r.data.paymentChoice, 'cash');
+  assert.equal((await driver('GET', '/api/driver/me')).data.activeBooking.paymentChoice, 'cash');
+  assert.equal((await driver('POST', `/api/driver/bookings/${trip3.id}/cash-collected`)).status, 200);
+  assert.equal((await customer('POST', `/api/customer/bookings/${trip3.id}/pay-cash`)).status, 409, 'already paid');
+  await admin('POST', `/api/admin/drivers/${d.id}/settlement`, { amount: trip3.commission });
+
   // Ops pays the driver out by UPI.
   const owedToDriver = trip.driverEarning + trip2.driverEarning;
   assert.equal((await admin('GET', '/api/admin/overview')).data.owedToDrivers, owedToDriver);

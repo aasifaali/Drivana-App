@@ -146,6 +146,11 @@ const MIGRATIONS = [
   ALTER TABLE ledger_entries_new RENAME TO ledger_entries;
   CREATE INDEX ledger_driver ON ledger_entries(driver_id);
   `,
+  // How the customer said they will pay after the trip: 'online' or 'cash'.
+  // The driver waits for this before collecting cash.
+  `
+  ALTER TABLE bookings ADD COLUMN payment_choice TEXT;
+  `,
 ];
 
 export function openDb(file) {

@@ -140,6 +140,7 @@ export default async function customerRoutes(app, { db, config }) {
     const b = ownBooking(request);
     if (b.status !== 'completed') throw httpError(409, 'You can pay once the trip ends');
     if (b.payment_status !== 'pending') throw httpError(409, 'This trip is already paid');
+    db.prepare("UPDATE bookings SET payment_choice = 'online' WHERE id = ?").run(b.id);
     let orderId = b.razorpay_order_id;
     if (!orderId) {
       const order = await createOrder(config, {
@@ -160,6 +161,16 @@ export default async function customerRoutes(app, { db, config }) {
       description: `Trip ${bookingCode(b.id)}`,
       prefill: { name: u.name || '', email: u.email || '', contact: u.phone || '' },
     };
+  });
+
+  // Customer will pay the driver in cash; the driver's app then asks them to collect it.
+  app.post('/bookings/:id/pay-cash', async (request) => {
+    const b = ownBooking(request);
+    if (b.status !== 'completed') throw httpError(409, 'You can pay once the trip ends');
+    if (b.payment_status !== 'pending') throw httpError(409, 'This trip is already paid');
+    db.prepare("UPDATE bookings SET payment_choice = 'cash' WHERE id = ?").run(b.id);
+    logEvent(db, b.id, request.user.id, 'chose_cash');
+    return bookingView(getBooking(db, b.id), 'customer');
   });
 
   // Step 2: checkout hands back a signed payment; verify it before marking paid.
