@@ -7,7 +7,7 @@ One Node server runs three web apps (PWAs):
 | Path | Who | Sign-in |
 |---|---|---|
 | `/` | Customers book a driver, share the start OTP, pay cash, rate | Google (then types their mobile number, no OTP) |
-| `/driver` | Drivers sign up, go online, accept requests, run trips, confirm cash | Phone OTP |
+| `/driver` | Drivers sign up, go online, accept requests, run trips, confirm cash | Google (types their mobile number in the profile); phone OTP once `DRIVER_LOGIN=otp` |
 | `/admin` | Ops team: live bookings, manual assignment, driver approvals, commission dues, pricing | Google (allow-listed emails) |
 
 Stack: Node 22.13+ (Fastify, built-in `node:sqlite`), React + Vite, plain CSS.
@@ -23,8 +23,8 @@ npm run dev               # API on :3000, web on http://localhost:5173
 With `DEV_LOGIN=1` every sign-in screen shows a **Developer sign-in** box, so you can test without Google or SMS. To try a full trip:
 
 1. Open `http://localhost:5173/admin` and sign in as a test admin.
-2. In another browser profile (or a private window), open `/driver`, sign in with any mobile number and fill in the profile. Approve the driver in **Admin › Drivers**, then go online in the driver app.
-3. Open `/` and sign in as a test customer, enter any mobile number, add a car and book. (Driver sign-in OTP codes are printed in the server terminal: `[SMS] 123456 is your Drivana verification code`.)
+2. In another browser profile (or a private window), open `/driver`, use the developer sign-in with any mobile number and fill in the profile. Approve the driver in **Admin › Drivers**, then go online in the driver app.
+3. Open `/` and sign in as a test customer, enter any mobile number, add a car and book.
 4. Accept the request in the driver app. Use the OTP shown to the customer to start the trip, then end it and tap **Cash collected**.
 
 Run the tests with `npm test`.
@@ -70,7 +70,7 @@ To update: copy the new code, then `npm ci && npm run build && sudo systemctl re
 
 ## Before going public
 
-- **SMS:** driver sign-in OTPs are only printed in the server log (`SMS_PROVIDER=console`). Add a provider such as MSG91 or 2Factor in `server/sms.js`. DLT registration of your sender ID and template is required in India.
+- **SMS (optional, later):** drivers sign in with Google for now. To switch them to phone OTP, add a provider such as MSG91 or 2Factor in `server/sms.js` (DLT registration of your sender ID and template is required in India), then set `DRIVER_LOGIN=otp`.
 - **Policies:** add Terms, Privacy and Cancellation pages, and settle damage liability and insurance for drivers.
 - **Driver alerts:** drivers only see new requests while the app is open. Add web push, SMS or WhatsApp alerts next, and plan the native driver app.
 

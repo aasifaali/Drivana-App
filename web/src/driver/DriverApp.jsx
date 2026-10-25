@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, post, put } from '../api.js';
 import {
-  Brand, DevLogin, ErrorBox, Icon, KeralaScene, PhoneOtpForm, Splash, SupportLinks,
+  Brand, DevLogin, ErrorBox, GoogleSignIn, Icon, KeralaScene, PhoneOtpForm, Splash, SupportLinks,
   dateTime, getPosition, rupees, transmissionLabel, useAction, useLocationPermission, useManifest, usePolling,
 } from '../ui.jsx';
 import DriverTrip from './DriverTrip.jsx';
@@ -60,8 +60,18 @@ function DriverLogin({ config, onDone }) {
       <header className="topbar"><Brand variant="gold" label="Drivana Partner" /></header>
       <div className="stack grow" style={{ justifyContent: 'center', gap: 20 }}>
         <h1 className="h1" style={{ fontSize: 34 }}>Drive with Drivana</h1>
-        <p className="muted" style={{ margin: 0, fontSize: 17 }}>Earn by driving customers' own cars, on your schedule. Sign in with your mobile number.</p>
-        <PhoneOtpForm sendPath="/auth/driver/otp" verifyPath="/auth/driver/verify" onDone={onDone} submitLabel="Sign in" dark />
+        {config.driverLogin === 'otp' ? (
+          <>
+            <p className="muted" style={{ margin: 0, fontSize: 17 }}>Earn by driving customers' own cars, on your schedule. Sign in with your mobile number.</p>
+            <PhoneOtpForm sendPath="/auth/driver/otp" verifyPath="/auth/driver/verify" onDone={onDone} submitLabel="Sign in" dark />
+          </>
+        ) : (
+          <>
+            <p className="muted" style={{ margin: 0, fontSize: 17 }}>Earn by driving customers' own cars, on your schedule. Sign in with your Google account to register or continue.</p>
+            <GoogleSignIn clientId={config.googleClientId} role="driver" onDone={onDone} theme="outline" />
+            {!config.googleClientId && !config.devLogin && <div className="notice">Sign-in is not set up yet.</div>}
+          </>
+        )}
         {config.devLogin && <DevLogin role="driver" onDone={onDone} dark />}
       </div>
     </main>
@@ -81,7 +91,8 @@ function Message({ title, text }) {
 function ProfileForm({ me, onDone }) {
   const p = me.profile;
   const [form, setForm] = useState({
-    name: me.user.name || '',
+    name: me.user.name && !me.user.name.includes('@') ? me.user.name : '',
+    phone: me.user.phone ? me.user.phone.replace(/^\+91/, '') : '',
     licenceNumber: p.licenceNumber || '',
     licenceExpiry: p.licenceExpiry || '',
     transmissions: p.transmissions || '',
@@ -98,6 +109,9 @@ function ProfileForm({ me, onDone }) {
       )}
       <label className="field"><span>Full name (as on licence)</span>
         <input className="input" value={form.name} onChange={set('name')} required autoComplete="name" /></label>
+      <label className="field"><span>Mobile number (customers and our team will call you on this)</span>
+        <input className="input" type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="98765 43210"
+          value={form.phone} onChange={set('phone')} required /></label>
       <label className="field"><span>Driving licence number</span>
         <input className="input" value={form.licenceNumber} onChange={set('licenceNumber')} required style={{ textTransform: 'uppercase' }} /></label>
       <label className="field"><span>Licence valid until</span>

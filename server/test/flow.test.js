@@ -52,10 +52,11 @@ test('full cash booking flow', async () => {
 
   // Driver onboarding and approval.
   r = await driver('PUT', '/api/driver/profile', {
-    name: 'Ravi Kumar', licenceNumber: 'KL1320200001234', licenceExpiry: '2035-01-01', transmissions: 'both', experienceYears: 6,
+    name: 'Ravi Kumar', phone: '9876543210', licenceNumber: 'KL1320200001234', licenceExpiry: '2035-01-01', transmissions: 'both', experienceYears: 6,
   });
   assert.equal(r.status, 200);
   assert.equal((await driver('POST', '/api/driver/status', { online: true })).status, 403);
+  assert.equal((await driver2('PUT', '/api/driver/profile', { name: 'Dup', phone: '9876543210', licenceNumber: 'KL1320200009999', licenceExpiry: '2035-01-01', transmissions: 'manual' })).status, 409, 'driver numbers are unique');
   await driver2('PUT', '/api/driver/profile', { name: 'Manual Only', licenceNumber: 'KL1320200009999', licenceExpiry: '2035-01-01', transmissions: 'manual' });
   const drivers = (await admin('GET', '/api/admin/drivers')).data;
   for (const d of drivers) await admin('POST', `/api/admin/drivers/${d.id}/status`, { status: 'approved' });

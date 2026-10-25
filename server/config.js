@@ -20,6 +20,8 @@ export function loadConfig(env = process.env) {
     // Local testing only: sign in without Google or SMS. Never on in production.
     devLogin: !production && env.DEV_LOGIN === '1',
     smsProvider: env.SMS_PROVIDER || 'console',
+    // How drivers sign in: "google" (default) or "otp" once SMS is set up.
+    driverLogin: env.DRIVER_LOGIN === 'otp' ? 'otp' : 'google',
   };
   if (production && config.jwtSecret.length < 32) {
     throw new Error('JWT_SECRET must be set to at least 32 random characters in production');

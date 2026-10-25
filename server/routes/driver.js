@@ -1,5 +1,5 @@
 import { now, tx } from '../db.js';
-import { requireRole } from '../auth.js';
+import { normalizePhone, requireRole } from '../auth.js';
 import { getSettings, httpError } from '../settings.js';
 import { distanceKm, finalFare } from '../pricing.js';
 import {
@@ -59,7 +59,7 @@ export default async function driverRoutes(app, { db, config }) {
         rating: d.rating_count ? Math.round((d.rating_sum / d.rating_count) * 10) / 10 : null,
         ratingCount: d.rating_count,
         adminNote: d.admin_note,
-        complete: !!(u.name && d.licence_number && d.licence_expiry && d.transmissions),
+        complete: !!(u.name && u.phone && d.licence_number && d.licence_expiry && d.transmissions),
       },
       owed,
       owedLimit: s.owedLimit,
@@ -72,8 +72,12 @@ export default async function driverRoutes(app, { db, config }) {
   app.put('/profile', async (request) => {
     const d = profileOf(request.user.id);
     if (d.status === 'approved' || d.status === 'suspended') throw httpError(409, 'Contact support to change your details');
-    const { name, licenceNumber, licenceExpiry, transmissions, experienceYears } = request.body || {};
+    const { name, phone: rawPhone, licenceNumber, licenceExpiry, transmissions, experienceYears } = request.body || {};
     if (!String(name || '').trim()) throw httpError(400, 'Name is required');
+    // OTP sign-in already gave us a verified number; Google sign-in drivers type it here.
+    const phone = request.user.phone && !rawPhone ? request.user.phone : normalizePhone(rawPhone);
+    const taken = db.prepare("SELECT id FROM users WHERE role = 'driver' AND phone = ? AND id != ?").get(phone, request.user.id);
+    if (taken) throw httpError(409, 'This mobile number is already registered to another driver');
     if (String(licenceNumber || '').trim().length < 6) throw httpError(400, 'Enter your driving licence number');
     if (!/^\d{4}-\d{2}-\d{2}$/.test(licenceExpiry || '') || licenceExpiry < new Date().toISOString().slice(0, 10)) {
       throw httpError(400, 'Enter a valid licence expiry date');
@@ -81,7 +85,7 @@ export default async function driverRoutes(app, { db, config }) {
     if (!['manual', 'automatic', 'both'].includes(transmissions)) throw httpError(400, 'Choose which cars you can drive');
     const years = Math.max(0, Math.min(60, Math.floor(Number(experienceYears) || 0)));
     tx(db, () => {
-      db.prepare('UPDATE users SET name = ? WHERE id = ?').run(String(name).trim().slice(0, 80), request.user.id);
+      db.prepare('UPDATE users SET name = ?, phone = ? WHERE id = ?').run(String(name).trim().slice(0, 80), phone, request.user.id);
       db.prepare(
         `UPDATE drivers SET licence_number = ?, licence_expiry = ?, transmissions = ?, experience_years = ?, status = 'pending'
          WHERE user_id = ?`,

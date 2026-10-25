@@ -16,6 +16,7 @@ export default async function authRoutes(app, { db, config }) {
     return {
       googleClientId: config.googleClientId,
       devLogin: config.devLogin,
+      driverLogin: config.driverLogin,
       city: s.city,
       supportPhone: s.supportPhone,
       supportWhatsapp: s.supportWhatsapp,
@@ -23,33 +24,37 @@ export default async function authRoutes(app, { db, config }) {
     };
   });
 
-  // Customers and admins sign in with Google.
+  // Customers and admins sign in with Google; drivers too unless DRIVER_LOGIN=otp.
   app.post('/api/auth/google', async (request, reply) => {
     const { credential, role } = request.body || {};
-    if (!['customer', 'admin'].includes(role)) throw httpError(400, 'Invalid role');
+    const roles = config.driverLogin === 'google' ? ['customer', 'admin', 'driver'] : ['customer', 'admin'];
+    if (!roles.includes(role)) throw httpError(400, 'Invalid role');
     const profile = await verifyGoogleCredential(config, credential);
     if (role === 'admin' && !config.adminEmails.includes(profile.email)) {
       throw httpError(403, 'This Google account is not allowed to use the dashboard');
     }
     const user = upsertGoogleUser(db, role, profile);
+    if (role === 'driver') db.prepare('INSERT OR IGNORE INTO drivers (user_id) VALUES (?)').run(user.id);
     setSession(reply, config, user);
     return { ok: true };
   });
 
-  // Drivers sign in with their phone number.
-  app.post('/api/auth/driver/otp', async (request) => {
-    const phone = normalizePhone(request.body?.phone);
-    await requestOtp(config, 'driver-login', phone, request.log);
-    return { ok: true, phone };
-  });
+  if (config.driverLogin === 'otp') {
+    // Drivers sign in with their phone number (needs a real SMS provider).
+    app.post('/api/auth/driver/otp', async (request) => {
+      const phone = normalizePhone(request.body?.phone);
+      await requestOtp(config, 'driver-login', phone, request.log);
+      return { ok: true, phone };
+    });
 
-  app.post('/api/auth/driver/verify', async (request, reply) => {
-    const phone = normalizePhone(request.body?.phone);
-    checkOtp('driver-login', phone, request.body?.code);
-    const user = findOrCreateDriver(db, phone);
-    setSession(reply, config, user);
-    return { ok: true };
-  });
+    app.post('/api/auth/driver/verify', async (request, reply) => {
+      const phone = normalizePhone(request.body?.phone);
+      checkOtp('driver-login', phone, request.body?.code);
+      const user = findOrCreateDriver(db, phone);
+      setSession(reply, config, user);
+      return { ok: true };
+    });
+  }
 
   app.post('/api/auth/logout', async (request, reply) => {
     clearSession(reply, request.body?.role);
