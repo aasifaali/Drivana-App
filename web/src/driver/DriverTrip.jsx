@@ -14,7 +14,10 @@ export default function DriverTrip({ booking: b, refresh }) {
       {b.status === 'accepted' && (
         <button className="btn primary block" disabled={action.busy} onClick={() => call('arrived')}>I've reached the car</button>
       )}
-      {['accepted', 'arrived'].includes(b.status) && <StartTrip action={action} call={call} />}
+      {b.status === 'accepted' && (
+        <p className="small muted center" style={{ margin: 0 }}>When you reach the car, tap the button above. The customer then gets the OTP to start the trip.</p>
+      )}
+      {b.status === 'arrived' && <StartTrip action={action} call={call} />}
       {b.status === 'in_progress' && <EndTrip action={action} call={call} />}
       {b.status !== 'completed' && <ErrorBox error={action.error} />}
     </section>

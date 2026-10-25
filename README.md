@@ -31,6 +31,7 @@ Run the tests with `npm test`.
 
 ## How the business rules work
 
+- **Start OTP:** the customer sees a 4-digit code only after the driver taps "I've reached the car"; the driver types it to start the trip.
 - **Booking stages:** `requested → accepted → arrived → in_progress → completed`, or `cancelled`. Every change is logged in `booking_events`, which you can see in the booking's History in the dashboard.
 - **Matching:** each request is shown to approved, online drivers within the dispatch radius who can drive that gearbox, and the first to accept gets it. If nobody accepts, it appears under **Needs attention** in the dashboard with an **Assign driver** button.
 - **Pricing:** the base fare covers the minimum hours, then the hourly rate applies. Overtime past the grace period is billed in 30-minute blocks, plus a flat night charge for trips touching 10pm–6am IST. Prices are copied onto each booking when it's made, so later changes in Settings don't alter past bookings.

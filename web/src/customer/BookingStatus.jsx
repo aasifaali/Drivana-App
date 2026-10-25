@@ -23,7 +23,8 @@ export default function BookingStatus({ booking: b, ratingTags, refresh }) {
 
       {b.status === 'requested' && <Searching booking={b} />}
       {b.driver && b.status !== 'completed' && <DriverCard driver={b.driver} />}
-      {['accepted', 'arrived'].includes(b.status) && <OtpCard otp={b.startOtp} />}
+      {b.status === 'accepted' && <OtpPending />}
+      {b.status === 'arrived' && b.startOtp && <OtpCard otp={b.startOtp} />}
       {b.status === 'in_progress' && <TripTimer booking={b} />}
       {b.status !== 'completed' && b.status !== 'in_progress' && <Timeline booking={b} />}
       {b.status === 'completed' && <Completed booking={b} ratingTags={ratingTags} refresh={refresh} />}
@@ -79,6 +80,18 @@ function OtpCard({ otp }) {
       <div className="otp-digits" aria-label={`OTP ${otp.split('').join(' ')}`}>
         {otp.split('').map((d, i) => <span key={i}>{d}</span>)}
       </div>
+    </div>
+  );
+}
+
+function OtpPending() {
+  return (
+    <div className="card inverse" style={{ flexDirection: 'row', alignItems: 'center' }}>
+      <Icon name="lock" size={22} />
+      <span className="grow">
+        <b>Start trip OTP</b><br />
+        <span className="small" style={{ color: '#BFCCC1' }}>Your 4-digit code will appear here when your driver reaches your car.</span>
+      </span>
     </div>
   );
 }

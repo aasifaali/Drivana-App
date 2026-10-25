@@ -68,7 +68,7 @@ test('full cash booking flow', async () => {
   assert.equal(r.status, 200, JSON.stringify(r.data));
   const booking = r.data;
   assert.equal(booking.estimate, 400 + 2 * 150);
-  assert.match(booking.startOtp, /^\d{4}$/);
+  assert.equal(booking.startOtp, undefined, 'no OTP before the driver arrives');
   assert.equal((await customer('POST', '/api/customer/bookings', { vehicleId, pickupAddress: 'Second booking here', hours: 2 })).status, 409);
 
   // Manual-only driver must not see an automatic car; the other driver does.
@@ -88,9 +88,14 @@ test('full cash booking flow', async () => {
   assert.equal(r.data.activeBooking.status, 'accepted');
   assert.equal(r.data.activeBooking.driver.name, 'Ravi Kumar');
 
+  assert.equal(r.data.activeBooking.startOtp, undefined, 'OTP hidden while the driver is on the way');
+  assert.equal((await driver('POST', `/api/driver/bookings/${booking.id}/start`, { otp: '1234' })).status, 409, 'must arrive first');
   await driver('POST', `/api/driver/bookings/${booking.id}/arrived`);
-  assert.equal((await driver('POST', `/api/driver/bookings/${booking.id}/start`, { otp: '0000' })).status, booking.startOtp === '0000' ? 200 : 400);
-  assert.equal((await driver('POST', `/api/driver/bookings/${booking.id}/start`, { otp: booking.startOtp })).status, 200);
+  const otp = (await customer('GET', '/api/customer/me')).data.activeBooking.startOtp;
+  assert.match(otp, /^\d{4}$/, 'OTP shown once the driver has arrived');
+  const wrong = otp === '0000' ? '1111' : '0000';
+  assert.equal((await driver('POST', `/api/driver/bookings/${booking.id}/start`, { otp: wrong })).status, 400);
+  assert.equal((await driver('POST', `/api/driver/bookings/${booking.id}/start`, { otp })).status, 200);
 
   // Pretend the trip lasted 4h40m.
   const started = new Date(Date.now() - (4 * 60 + 40) * 60000).toISOString();

@@ -84,7 +84,8 @@ export function bookingView(b, audience) {
         }
       : null,
   };
-  if (audience === 'customer') view.startOtp = b.start_otp;
+  // The customer sees the start code only once the driver is at the car.
+  if (audience === 'customer' && b.status === 'arrived') view.startOtp = b.start_otp;
   if (audience !== 'customer') {
     view.commission = b.commission;
     view.driverEarning = b.driver_earning;

@@ -186,9 +186,10 @@ export default async function driverRoutes(app, { db, config }) {
 
   app.post('/bookings/:id/start', async (request) => {
     const b = ownBooking(request);
+    if (b.status === 'accepted') throw httpError(409, "Tap \"I've reached the car\" first so the customer gets the OTP");
+    if (b.status !== 'arrived') throw httpError(409, 'This trip cannot be started');
     if (String(request.body?.otp || '').trim() !== b.start_otp) throw httpError(400, 'Wrong OTP — ask the customer for the 4-digit code');
-    if (!['accepted', 'arrived'].includes(b.status)) throw httpError(409, 'This trip cannot be started');
-    if (!transition(b.id, b.status, 'in_progress', ', started_at = ?', [now()])) throw httpError(409, 'This trip cannot be started');
+    if (!transition(b.id, 'arrived', 'in_progress', ', started_at = ?', [now()])) throw httpError(409, 'This trip cannot be started');
     logEvent(db, b.id, request.user.id, 'started');
     return bookingView(getBooking(db, b.id), 'driver');
   });
