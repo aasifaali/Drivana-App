@@ -1,7 +1,7 @@
 // Drivana service worker: makes the app installable and opens instantly.
 // API calls always go to the network — booking data must never be stale.
-const CACHE = 'drivana-v1';
-const SHELL = ['/', '/manifest.webmanifest', '/driver.webmanifest', '/icons/customer-192.png', '/icons/driver-192.png'];
+const CACHE = 'drivana-v2';
+const SHELL = ['/', '/manifest.webmanifest', '/driver.webmanifest', '/icons/customer-192.png', '/icons/driver-192.png', '/brand/drivana-mark-gold.png'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
