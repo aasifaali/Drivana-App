@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { api, post, put } from '../api.js';
 import {
   Brand, DevLogin, ErrorBox, GoogleSignIn, Icon, Splash, SupportLinks,
@@ -78,7 +79,8 @@ function Welcome({ config, onDone }) {
           <div className="notice">Sign-in is not set up yet. Add GOOGLE_CLIENT_ID to the server's .env file.</div>
         )}
         <p className="small center" style={{ color: '#9AA1AA', margin: 0 }}>
-          By continuing you agree to our Terms and Privacy Policy
+          By continuing you agree to our <Link to="/terms" style={{ color: '#D5D9DE' }}>Terms</Link> and{' '}
+          <Link to="/privacy" style={{ color: '#D5D9DE' }}>Privacy Policy</Link>
         </p>
       </div>
     </main>

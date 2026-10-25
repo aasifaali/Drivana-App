@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { api } from './api.js';
 import { Splash } from './ui.jsx';
+import { Privacy, Terms } from './Legal.jsx';
 import './styles.css';
 
 const CustomerApp = lazy(() => import('./customer/CustomerApp.jsx'));
@@ -20,6 +21,8 @@ function Root() {
       <Routes>
         <Route path="/driver/*" element={<DriverApp config={config} />} />
         <Route path="/admin/*" element={<AdminApp config={config} />} />
+        <Route path="/privacy" element={<Privacy />} />
+        <Route path="/terms" element={<Terms />} />
         <Route path="/*" element={<CustomerApp config={config} />} />
       </Routes>
     </Suspense>
