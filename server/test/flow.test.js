@@ -47,7 +47,8 @@ test('full cash booking flow', async () => {
   const vehicleId = r.data.id;
   r = await customer('POST', '/api/customer/bookings', { vehicleId, pickupAddress: 'Near Kovvappuram Junction', hours: 4 });
   assert.equal(r.status, 400);
-  app.db.prepare("UPDATE users SET phone = '+919000000001' WHERE role = 'customer'").run();
+  assert.equal((await customer('PUT', '/api/customer/phone', { phone: '12345' })).status, 400, 'invalid number');
+  assert.equal((await customer('PUT', '/api/customer/phone', { phone: '90000 00001' })).data.phone, '+919000000001');
 
   // Driver onboarding and approval.
   r = await driver('PUT', '/api/driver/profile', {

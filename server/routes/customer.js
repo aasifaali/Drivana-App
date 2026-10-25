@@ -1,6 +1,6 @@
 import crypto from 'node:crypto';
 import { now, tx } from '../db.js';
-import { checkOtp, normalizePhone, requestOtp, requireRole } from '../auth.js';
+import { normalizePhone, requireRole } from '../auth.js';
 import { getSettings, httpError } from '../settings.js';
 import { estimateFare, pricingSnapshot } from '../pricing.js';
 import { activeBookingFor, bookingView, getBooking, listBookings, logEvent, unpaidCompletedFor } from '../bookings.js';
@@ -53,19 +53,11 @@ export default async function customerRoutes(app, { db, config }) {
     return { ok: true };
   });
 
-  app.post('/phone/otp', async (request) => {
+  // Customers type their number once, no OTP. The driver uses it to call them.
+  app.put('/phone', async (request) => {
     const phone = normalizePhone(request.body?.phone);
-    await requestOtp(config, `customer-phone:${request.user.id}`, phone, request.log);
-    return { ok: true, phone };
-  });
-
-  app.post('/phone/verify', async (request) => {
-    const phone = normalizePhone(request.body?.phone);
-    checkOtp(`customer-phone:${request.user.id}`, phone, request.body?.code);
-    const taken = db.prepare("SELECT id FROM users WHERE role = 'customer' AND phone = ? AND id != ?").get(phone, request.user.id);
-    if (taken) throw httpError(409, 'This number is already linked to another account');
     db.prepare('UPDATE users SET phone = ? WHERE id = ?').run(phone, request.user.id);
-    return { ok: true };
+    return { ok: true, phone };
   });
 
   app.post('/vehicles', async (request) => {

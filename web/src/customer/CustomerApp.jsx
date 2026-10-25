@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
-import { api, post } from '../api.js';
+import { api, post, put } from '../api.js';
 import {
-  Brand, DevLogin, ErrorBox, GoogleSignIn, Icon, PhoneOtpForm, Splash, SupportLinks,
+  Brand, DevLogin, ErrorBox, GoogleSignIn, Icon, Splash, SupportLinks,
   dateTime, getPosition, rupees, transmissionLabel, useAction, useManifest, usePolling,
 } from '../ui.jsx';
 import BookingStatus from './BookingStatus.jsx';
@@ -86,12 +86,27 @@ function Welcome({ config, onDone }) {
 }
 
 function PhoneStep({ onDone }) {
+  const [phone, setPhone] = useState('');
+  const { busy, error, run } = useAction();
+  const submit = (e) => {
+    e.preventDefault();
+    run(async () => {
+      await put('/customer/phone', { phone });
+      onDone();
+    });
+  };
   return (
-    <section className="stack">
+    <form className="stack" onSubmit={submit}>
       <h1 className="h1">Add your mobile number</h1>
       <p className="muted" style={{ margin: 0 }}>Your driver will call this number when they reach your car.</p>
-      <PhoneOtpForm sendPath="/customer/phone/otp" verifyPath="/customer/phone/verify" onDone={onDone} submitLabel="Verify number" />
-    </section>
+      <label className="field">
+        <span>Mobile number</span>
+        <input className="input" type="tel" inputMode="numeric" autoComplete="tel-national" placeholder="98765 43210"
+          value={phone} onChange={(e) => setPhone(e.target.value)} required autoFocus />
+      </label>
+      <ErrorBox error={error} />
+      <button className="btn dark block" disabled={busy}>Continue</button>
+    </form>
   );
 }
 

@@ -116,6 +116,12 @@ const MIGRATIONS = [
     value TEXT NOT NULL
   );
   `,
+  // Customer numbers are no longer OTP-verified, so only driver numbers
+  // (their login) must be unique.
+  `
+  DROP INDEX users_role_phone;
+  CREATE UNIQUE INDEX users_driver_phone ON users(phone) WHERE role = 'driver' AND phone IS NOT NULL;
+  `,
 ];
 
 export function openDb(file) {
